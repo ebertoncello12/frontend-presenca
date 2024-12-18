@@ -1,38 +1,52 @@
+import React from "react";
 import { HomeOutlined, AppstoreAddOutlined, PayCircleOutlined, AreaChartOutlined, SettingOutlined, BarsOutlined } from "@ant-design/icons";
 import { Menu } from "antd";
-const MenuList = ({darkTheme}) => {
-    const pageRedirect = (key) => {
-        console.log('Page Key - ',key);
-    }
+import { Link } from "react-router-dom";
+
+const MenuList = ({ darkTheme }) => {
     const items = [
-        { label:'Home', key:'home', icon:<HomeOutlined/>},
-        { label:'Activity', key:'activity', icon:<AppstoreAddOutlined/>},
+        { label:'Home', key:'home', icon:<HomeOutlined />, url:'/home'},
+        { label:'Materias', key:'subjects', icon:<AppstoreAddOutlined />, url:'/materias'},
+        { label:'Faltas', key:'faults', icon:<AppstoreAddOutlined />, url:'/faltas'},
+        { label:'QR Code', key:'qrcode', icon:<PayCircleOutlined />, url:'/qrcode'}, // Aqui foi trocado para PayCircleOutlined
         { 
-            label:'Task', key:'task', icon:<BarsOutlined/>,
+            label:'Aulas', key:'class', icon:<BarsOutlined />,
+            label:'Aulas', key:'class', icon:<BarsOutlined />,
             children:[
-                { label:'Task 1', key:'task-1'},
-                { 
-                    label:'Task 2', key:'task-2',
-                    children:[
-                        { label:'Sub Task 1', key:'sub-task-1'},
-                        { label:'Sub Task 2', key:'sub-task-2'},
-                    ]
-                },
+                { label:'Presença', key:'attendance', icon:<AreaChartOutlined />, url:'/presenca'},
+                { label:'Qr Code', key:'qrcode-aulas', icon:<PayCircleOutlined />, url:'/qrcode-aulas'},
             ]
         },
-        { label:'Payment', key:'payment', icon:<PayCircleOutlined/>},
-        { label:'Progress', key:'progress', icon:<AreaChartOutlined/>},
-        { label:'Settings', key:'settings', icon:<SettingOutlined/>}
-    ]
+        { label:'Configurações', key:'settings', icon:<SettingOutlined />, url:'/configuracao'}
+    ];
+
+    const renderMenuItems = (items) => {
+        return items.map(item => {
+            if (item.children) {
+                return (
+                    <Menu.SubMenu key={item.key} title={item.label} icon={item.icon}>
+                        {renderMenuItems(item.children)}
+                    </Menu.SubMenu>
+                );
+            } else {
+                return (
+                    <Menu.Item key={item.key} icon={item.icon}>
+                        <Link to={item.url}>{item.label}</Link>
+                    </Menu.Item>
+                );
+            }
+        });
+    };
+
     return (
         <Menu 
             theme={darkTheme ? 'dark' : 'light'}
             mode="inline"
-            items={items}
             className="menu-bar"
-            onClick={(e) => pageRedirect(e.key)}
-        />
-    )
-}
+        >
+            {renderMenuItems(items)}
+        </Menu>
+    );
+};
 
 export default MenuList;

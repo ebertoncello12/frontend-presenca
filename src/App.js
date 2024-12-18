@@ -1,52 +1,45 @@
-import { Button, Layout, theme } from "antd";
-import Logo from "./components/Logo";
-import MenuList from "./components/MenuList";
-import ToggleThemeButton from "./components/ToggleThemeButton";
-import { useState } from "react";
-import { MenuUnfoldOutlined, MenuFoldOutlined} from "@ant-design/icons";
-import UserProfile from "./components/UserProfile";
-import PageContent from "./components/PageContent";
-const { Header, Sider, Content, Footer } = Layout;
+import get from "lodash/get";
+import Auth from "./pages/Auth";
+import { useSelector } from "react-redux";
+import { useRoutes } from "react-router-dom";
+import { Navigate } from "react-router-dom";
+import Dashboard from "./pages/Dashboard/Dashboard";
+import Attendance from "./pages/Attendance/Attendance";
+import Home from "./pages/HomePage/Home";
+import Classes from "./pages/Classes/Classes";
+import QrCode from "./pages/QrCode/QrCode";
 
-const App = () => {
-  const [darkTheme, setDarkTheme] = useState(true);
-  const toggleTheme = () => {
-    setDarkTheme(!darkTheme);
-  }
-  const [collapsed, setCollapsed] = useState(false);
-  const {
-    token: { colorBgContainer },
-  } = theme.useToken();
-  return (
-    <Layout style={{minHeight:'100%'}}>
-      <Sider collapsed={collapsed} className="sidebar" theme={darkTheme ? 'dark' : 'light'}>
-        <Logo />
-        <MenuList darkTheme={darkTheme}/>
-        <ToggleThemeButton darkTheme={darkTheme} toggleTheme={toggleTheme}/>
-      </Sider>
-      <Layout>
-        <Header style={{display:'flex', justifyContent:'space-between', background: colorBgContainer, paddingLeft:'10px', paddingRight:'10px'}}>
-          <div>
-            <Button icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />} onClick={() => setCollapsed(!collapsed)}></Button>
-          </div>
-          <div>
-            <UserProfile />
-          </div>
-        </Header>
-        <Content>
-          <div style={{padding:'10px'}}>
-              <small>Home / Dashboard</small>
-          </div>
-          <div style={{paddingLeft:'10px', width:'99%'}}>
-              <PageContent />
-          </div>
-        </Content>
-        <Footer style={{textAlign:'center'}}>
-          Copyright {new Date().getFullYear()}, designed by Rubyvidhya
-        </Footer>
-      </Layout>
-    </Layout>
-  );
+
+const routes = (accessToken) => [
+  {
+    path: "/login",
+    element: <Auth />,
+  },
+  {
+    path: "/",
+    element: accessToken ? (
+      <Dashboard>
+        <Navigate to="/home" />
+      </Dashboard>
+    ) : (
+      <Navigate to="/login" />
+    ),
+    children: [
+      { path: "/home", element: <Home /> },
+      { path: "/aulas", element: <Classes /> },
+      { path: "/faltas", element: <Attendance /> },
+      { path: "/presenca", element: <Attendance /> },
+      { path: "/configuracao", element: <Attendance /> },
+      { path: "/qrcode", element: <QrCode /> },
+    ],
+  },
+];
+
+
+export default function App() {
+  const accessToken = useSelector((state) => state.auth.profile.accessToken);
+
+  const routing = useRoutes(routes(accessToken));
+
+  return <>{routing}</>;
 }
-
-export default App;

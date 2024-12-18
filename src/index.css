@@ -1,43 +1,19 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins&family=Monoton:wght@100;200;300;400;500;600;700;800&display=swap');
+@import '~antd/dist/antd.less';
 
-*{
-  margin: 0;
-  padding: 0;
-  border: none;
-  outline: none;
-  box-sizing: border-box;
-  font-family: 'Poppins',sans-serif;
+
+body {
+    margin: 0;
+    font-family: 'Montserrat', sans-serif;
+}
+  
+  
+* {
+box-sizing: border-box;
 }
 
-.sidebar {
-  color: #ffffff;
+:root{
+--main-color: #11998e;
+--text-color: #11425D;
+--active: #38ef7d;
 }
 
-.logo {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 10px;
-  color: #ffffff;
-  margin-top: 1rem;
-}
-
-.logo-icon{
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 40px;
-  width: 40px;
-  font-size: 1.5rem;
-  border-radius: 50%;
-  background-color: rgba(28,17,41,0.88);
-}
-
-.menu-bar {
-  height: 78vh;
-  margin-top: 2rem;
-  display: flex;
-  flex-direction: column;
-  gap:2;
-  font-size: 1rem;
-}

@@ -1,0 +1,34 @@
+/* calendar.css */
+.rbc-calendar {
+    font-family: Arial, sans-serif; /* Define a família de fontes para o calendário */
+    border: 1px solid #ddd; /* Adiciona uma borda ao redor do calendário */
+    border-radius: 4px; /* Arredonda as bordas do calendário */
+  }
+  
+  .rbc-toolbar {
+    margin-bottom: 20px; /* Adiciona espaço abaixo da barra de ferramentas */
+  }
+  
+  .rbc-month-view {
+    border: 1px solid #ddd; /* Adiciona uma borda ao redor da visualização de mês */
+    border-radius: 4px; /* Arredonda as bordas da visualização de mês */
+  }
+  
+  .rbc-event {
+    background-color: #1890ff; /* Cor de fundo dos eventos */
+    color: #fff; /* Cor do texto dos eventos */
+    border: none; /* Remove a borda dos eventos */
+    border-radius: 4px; /* Arredonda as bordas dos eventos */
+    padding: 2px 5px; /* Espaçamento interno dos eventos */
+    cursor: pointer; /* Altera o cursor ao passar por cima dos eventos */
+    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1); /* Sombra dos eventos */
+  }
+  
+  .rbc-event:hover {
+    background-color: #40a9ff; /* Cor de fundo ao passar o mouse nos eventos */
+  }
+  
+  .rbc-today {
+    background-color: #f0f0f0; /* Cor de fundo do dia atual */
+  }
+  

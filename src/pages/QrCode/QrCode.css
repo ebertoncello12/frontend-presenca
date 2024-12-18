@@ -1,0 +1,36 @@
+.qr-code-container {
+  max-width: 600px;
+  margin: 0 auto;
+  text-align: center;
+  padding: 20px;
+}
+
+.qr-code-title {
+  margin-bottom: 20px;
+}
+
+.qr-code-actions {
+  margin-bottom: 20px;
+}
+
+.qr-code-upload {
+  margin-right: 10px;
+}
+
+.qr-code-camera {
+  margin-left: 10px;
+}
+
+.qr-code-video {
+  width: 100%;
+  border: 1px solid #ccc;
+  margin-bottom: 10px;
+}
+
+.qr-code-result {
+  margin-top: 20px;
+}
+
+.qr-code-clear {
+  margin-top: 10px;
+}
