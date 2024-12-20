@@ -1,25 +1,43 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Button, message, Upload, Tooltip, Modal } from 'antd';
+import { Button, message, Upload, Tooltip, Modal, Popover, Spin, Progress } from 'antd';
 import { UploadOutlined, VideoCameraOutlined } from '@ant-design/icons';
+import { notification } from 'antd';
+
 import jsQR from 'jsqr';
 import StudentService from '../../services/Student/StudentService';
 import { useSelector } from 'react-redux';
 
 import './QrCode.css';
+import GeoLocalizaion from "../../components/GeoLocalization"
 import {useNavigate} from "react-router-dom";
 import * as faceapi from "face-api.js";
+import GeoLocatization from "../../components/GeoLocalization";
 
 const QrCode = ({ aluno }) => {
   const [scanResult, setScanResult] = useState(null);
   const [isCameraOpen, setIsCameraOpen] = useState(false);
+  const [isVisibleVideo, setIsVisibleVideo] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [isFaceRecognized, setIsFaceRecognized] = useState(false);
+    const [isInsideRadius, setInsideRadius] = useState(false);
+    console.log(isInsideRadius, 'dentro do raio')// Estado que indica se o usuário está dentro do raio
+
+
+    const [isFaceRecognitionInProgress, setIsFaceRecognitionInProgress] = useState(false);
   const [isPresenceFailed, setIsPresenceFailed] = useState(false);
   const videoRef = useRef(null);
   const navigate = useNavigate();
   const canvasRef = useRef()
   const [modelLoaded, setModelLoaded] = useState(false)
   const [isFaceValid, setFaceValid] = useState(false)
+ const [isLoadingVideo, setIsLoadingVideo] = useState(false);
+    const [failedAttempts, setFailedAttempts] = useState(0);
+
+    console.log(failedAttempts)
+
+
+
+
 
   const [labeledDescriptors, setLabeledDescriptors] = useState([])
   const [recognitionMessage, setRecognitionMessage] = useState('') // Mensagem de reconhecimento
@@ -27,16 +45,19 @@ const QrCode = ({ aluno }) => {
 
 
 
+    const startVideo = () => {
+        setIsLoadingVideo(true);
 
-  const startVideo = () => {
-    navigator.mediaDevices.getUserMedia({ video: true })
-        .then((currentStream) => {
-          videoRef.current.srcObject = currentStream
-        })
-        .catch((err) => {
-          console.log(err)
-        })
-  }
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then((currentStream) => {
+                videoRef.current.srcObject = currentStream;
+                setIsLoadingVideo(false); // Define como false quando terminar
+            })
+            .catch((err) => {
+                console.log(err);
+                setIsLoadingVideo(false);
+            });
+    };
 
 
 
@@ -63,7 +84,7 @@ const QrCode = ({ aluno }) => {
   const loadReferenceImage = async () => {
       const imageUrl = decodedPayload.payload.registrationFace;
       const studentName = decodedPayload.payload.studentName;
-      console.log(studentName)
+
       const image = await faceapi.fetchImage(imageUrl);
       const detections = await faceapi.detectSingleFace(image)
         .withFaceLandmarks()
@@ -80,37 +101,23 @@ const QrCode = ({ aluno }) => {
   }
 
   // Detecta faces da webcam usando o SSDMobileNetV1 e compara com a imagem de referência
+    // Detecta faces da webcam usando o SSDMobileNetV1 e compara com a imagem de referência
     const faceMyDetect = () => {
         if (!modelLoaded || labeledDescriptors.length === 0) return;
 
-        console.log('precisa cair aqui')
+
 
         let hasRecognized = false; // Variável para verificar se já foi chamado
-
-        setInterval(async () => {
+        let failedAttempts = 0; // Variável local para contar as tentativas falhas
+        const intervalId = setInterval(async () => {
             const detections = await faceapi.detectAllFaces(videoRef.current,
                 new faceapi.SsdMobilenetv1Options()).withFaceLandmarks().withFaceExpressions().withFaceDescriptors()
 
-            // Desenhar os resultados na tela
-            canvasRef.current.innerHTML = ''
-            const canvas = faceapi.createCanvasFromMedia(videoRef.current)
-            canvasRef.current.append(canvas)
 
-            faceapi.matchDimensions(canvas, {
-                width: 940,
-                height: 650
-            })
 
-            const resizedDetections = faceapi.resizeResults(detections, {
-                width: 940,
-                height: 650
-            })
 
-            faceapi.draw.drawDetections(canvas, resizedDetections)
-            faceapi.draw.drawFaceLandmarks(canvas, resizedDetections)
-            faceapi.draw.drawFaceExpressions(canvas, resizedDetections)
 
-            // Comparar a face da webcam com a imagem de referência usando FaceMatcher
+
             if (detections.length > 0 && !hasRecognized) { // Verifica se a face foi reconhecida e se já não foi chamada a função
                 const faceDescriptor = detections[0].descriptor
 
@@ -124,20 +131,50 @@ const QrCode = ({ aluno }) => {
                     setRecognitionMessage(decodedPayload.payload.studentName)
                     handleScanResult(scanResult); // Chama apenas uma vez
                     hasRecognized = true; // Marca que o reconhecimento já ocorreu
-                    message.success('Reconhecimento facial bem-sucedido!');
+                    notification.success({
+                        message: `Reconhecimento facial bem-sucedido! Bem-vindo, ${decodedPayload.payload.studentName}`,
+                        description: 'Você foi reconhecido com sucesso.',
+                        placement: 'topRight', // Posição da notificação
+                        duration: 5, // Tempo em segundos para a notificação desaparecer
+                        style: { fontSize: '15' }, // Aumenta o tamanho da fonte
+                    });
                     setIsFaceRecognized(true);
-                     setModalVisible(false);
+                    setModalVisible(false);
                     setIsPresenceFailed(false);
+                    setIsFaceRecognitionInProgress(false);
 
+                    // Resetar o contador de tentativas falhas em caso de sucesso
+                    setFailedAttempts(0); // Resetar as tentativas falhas
+                    failedAttempts = 0;
                 } else {
-                    setRecognitionMessage('Reconhecimento falhou. Nenhuma correspondência encontrada.')
+                    // Incrementar o contador de tentativas falhas
+                    failedAttempts++;
+                    setFailedAttempts((prevAttempts) => prevAttempts + 1);
+                    if (failedAttempts === 20) {
+
+                        setRecognitionMessage('Reconhecimento falhou. Nenhuma correspondência encontrada.');
+                        setIsFaceRecognitionInProgress(false);
+                        message.warning('Falha ao tentar fazer o reconhecimento facial, tente novamente!');
+                        notification.warning({
+                            message: 'Erro no Reconhecimento Facial',
+                            description: 'Falha ao tentar fazer o reconhecimento facial. Tente novamente!',
+                            placement: 'topRight', // Posição da notificação
+                            duration: 5, // Tempo em segundos para a notificação desaparecer
+                            style: { fontSize: '18px' }, // Aumenta o tamanho da fonte
+                        });
+                        setIsFaceRecognized(false);
+                        stopCamera();
+                        setModalVisible(false)
+
+                        // registerFailedAttempt(decodedPayload.payload.studentId);
+
+
+                        clearInterval(intervalId);
+                    }
                 }
             }
         }, 200)
     }
-
-
-  console.log(decodedPayload,'teste')
 
 
 
@@ -278,113 +315,189 @@ const QrCode = ({ aluno }) => {
   };
 
   const startFaceRecognition = async () => {
+    setIsVisibleVideo(true)
+    setIsFaceRecognitionInProgress(true)
     await startVideo()
     loadModels()
   };
 
 
 
-  return (
-      <div className="qr-code-container">
-        <h2 className="qr-code-title">Scanear QR Code</h2>
-        <div className="qr-code-actions">
-          {!isCameraOpen ? (
-              <>
-                <Upload
-                    className="qr-code-upload"
-                    accept=".jpg,.png,.jpeg"
-                    beforeUpload={() => false}
-                    onChange={handleImageUpload}
-                    showUploadList={false}
-                >
-                  <Tooltip title="Clique para importar uma imagem contendo um QR Code">
-                    <Button icon={<UploadOutlined/>}>Importar Imagem do QR Code</Button>
-                  </Tooltip>
-                </Upload>
-                <Tooltip title="Clique para usar a câmera e escanear o QR Code">
-                  <Button className="qr-code-camera" onClick={startCamera} icon={<VideoCameraOutlined/>}>
-                    Usar Câmera para Scanear
-                  </Button>
-                </Tooltip>
-              </>
-          ) : (
-              <>
-                <video ref={videoRef} className="qr-code-video" autoPlay muted/>
-                <Button className="qr-code-camera" onClick={stopCamera}>
-                  Fechar Câmera
-                </Button>
-              </>
-          )}
-        </div>
+    return (
+        <div className="qr-code-container">
+            <h2 className="qr-code-title">Scanear QR Code</h2>
 
+            <div className="qr-code-actions">
+                {!isCameraOpen ? (
+                    <>
+                        <Upload
+                            className="qr-code-upload"
+                            accept=".jpg,.png,.jpeg"
+                            beforeUpload={() => false}
+                            onChange={handleImageUpload}
+                            showUploadList={false}
+                        >
+                            <Tooltip title={isInsideRadius ? "Clique para importar uma imagem contendo um QR Code" : "Para escanear o QR Code, você precisa estar dentro da localização permitida"}>
+                                <Button disabled={!isInsideRadius} icon={<UploadOutlined />}>Importar Imagem do QR Code</Button>
+                            </Tooltip>
+                        </Upload>
+                        <Tooltip title={isInsideRadius ? "Clique para usar a câmera e escanear o QR Code" : "Para escanear o QR Code, você precisa estar dentro da localização permitida"}>
+                            <Button className="qr-code-camera" disabled={!isInsideRadius} onClick={startCamera} icon={<VideoCameraOutlined />}>
+                                Usar Câmera para Scanear
+                            </Button>
+                        </Tooltip>
+                    </>
+                ) : (
+                    <>
+                        <video ref={videoRef} className="qr-code-video" autoPlay muted />
+                        <Button className="qr-code-camera" onClick={stopCamera}>
+                            Fechar Câmera
+                        </Button>
+                    </>
+                )}
 
-        {/* Modal de Reconhecimento Facial */}
-        <Modal
-            title="Reconhecimento Facial"
-            visible={modalVisible}
-            onCancel={() => {
-              setModalVisible(false);
-              stopCamera();
-            }}
-            footer={[
-              <Button key="cancel" onClick={() => {
-                setModalVisible(false);
-                stopCamera();
-              }}>
-                Fechar
-              </Button>,
-              <Button
-                  key="start"
-                  type="primary"
-                  onClick={startFaceRecognition}
-              >
-                Iniciar Reconhecimento
-              </Button>,
-            ]}
-        >
-          <p>Por favor, posicione-se frente à câmera para iniciar o reconhecimento facial.</p>
-          {isCameraOpen && (
-              <div className="myapp">
-                <div style={{ position: 'relative', width: '940px', height: '650px' }}>
-                  <video ref={videoRef} className="qr-code-video" autoPlay muted style={{ width: '100%', height: '100%' }} />
-                  <div ref={canvasRef} style={{ position: 'absolute', top: 0, left: 0 }} />
-                </div>
+            </div>
+
+            <Modal
+                title="Reconhecimento Facial"
+                visible={modalVisible}
+                onCancel={() => {
+                    setModalVisible(false);
+                    stopCamera();
+                }}
+                footer={[
+                    <Button
+                        key="cancel"
+                        onClick={() => {
+                            setModalVisible(false);
+                            stopCamera();
+                        }}
+                    >
+                        Fechar
+                    </Button>,
+                    <Button
+                        key="start"
+                        type="primary"
+                        onClick={startFaceRecognition}
+                        loading={isFaceRecognitionInProgress}
+                        disabled={isFaceRecognitionInProgress}
+                    >
+                        {isFaceRecognitionInProgress ? 'Realizando Reconhecimento Facial' : 'Iniciar Reconhecimento'}
+                    </Button>,
+                ]}
+                width={600}
+                style={{ textAlign: 'center' }}
+            >
+                <p>Por favor, posicione-se frente à câmera para iniciar o reconhecimento facial.</p>
+
+                <Progress
+                    percent={((failedAttempts / 20) * 100).toFixed(2)}
+                    status={failedAttempts >= 20 ? 'exception' : 'active'}
+                    showInfo={true}
+                    strokeColor={
+                        failedAttempts < 7
+                            ? '#FF4D4F'
+                            : failedAttempts < 14
+                                ? '#FF9C06'
+                                : '#52C41A'
+                    }
+                    style={{ marginBottom: '20px' }}
+                />
+
+                {isVisibleVideo && (
+                    <div
+                        className="video-container"
+                        style={{
+                            position: 'relative',
+                            width: '100%',
+                            height: '100%',
+                            paddingTop: '100%',
+                        }}
+                    >
+                        {isLoadingVideo && (
+                            <div
+                                style={{
+                                    position: 'absolute',
+                                    top: 0,
+                                    left: 0,
+                                    width: '100%',
+                                    height: '100%',
+                                    display: 'flex',
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    backgroundColor: 'rgba(0,0,0,0.1)',
+                                    zIndex: 2,
+                                }}
+                            >
+                                <Spin size="large" />
+                            </div>
+                        )}
+
+                        <video
+                            ref={videoRef}
+                            className="qr-code-video"
+                            autoPlay
+                            muted
+                            style={{
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                width: '100%',
+                                height: '100%',
+                                objectFit: 'cover',
+                                opacity: isVisibleVideo ? 1 : 0,
+                                transition: 'opacity 1s ease-in-out',
+                                zIndex: 1,
+                            }}
+                        />
+
+                        <div
+                            ref={canvasRef}
+                            style={{
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                width: '100%',
+                                height: '100%',
+                                pointerEvents: 'none',
+                            }}
+                        />
+                    </div>
+                )}
+
                 <div style={{ marginTop: '20px', fontSize: '20px', fontWeight: 'bold' }}>
-                  {recognitionMessage}
+                    {recognitionMessage}
                 </div>
-              </div>
-          )}
+            </Modal>
 
-        </Modal>
+            {/* Colocando o GeoLocalization logo abaixo */}
+            <div style={{ marginTop: '30px', padding: '10px', textAlign: 'center' }}>
+                <GeoLocatization setInsideRadius={setInsideRadius}/>
+            </div>
 
-        {/* Modal de Falha na Presença */}
-        <Modal
-            title="Falha ao Marcar Presença"
-            visible={isPresenceFailed}
-            onCancel={() => setIsPresenceFailed(false)}
-            footer={[
+            {/* Modal de Falha na Presença */}
+            <Modal
+                title="Falha ao Marcar Presença"
+                visible={isPresenceFailed}
+                onCancel={() => setIsPresenceFailed(false)}
+                footer={[
+                    <Button key="close" onClick={() => setIsPresenceFailed(false)}>
+                        Fechar
+                    </Button>,
+                ]}
+            >
+                <p>Não foi possível marcar a presença. Tente escanear o QR Code novamente.</p>
+            </Modal>
 
-              <Button key="close" onClick={() => setIsPresenceFailed(false)}>
-                Fechar
-              </Button>,
-            ]}
-        >
-          <p>Não foi possível marcar a presença. Tente escanear o QR Code novamente.</p>
-        </Modal>
-
-
-        <div className="myapp">
-          <div style={{position: 'relative', width: '940px', height: '650px'}}>
-            <video ref={videoRef} autoPlay muted style={{width: '100%', height: '100%'}}/>
-            <div ref={canvasRef} style={{position: 'absolute', top: 0, left: 0}}/>
-          </div>
-          <div style={{marginTop: '20px', fontSize: '20px', fontWeight: 'bold'}}>
-            {recognitionMessage}
-          </div>
+            <div className="myapp">
+                <div style={{ position: 'relative', width: '940px', height: '650px' }}>
+                    <video ref={videoRef} autoPlay muted style={{ width: '100%', height: '100%' }} />
+                    <div ref={canvasRef} style={{ position: 'absolute', top: 0, left: 0 }} />
+                </div>
+            </div>
         </div>
-      </div>
-  )
-      ;
+    );
+
 };
 
 export default QrCode;

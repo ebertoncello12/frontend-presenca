@@ -5,6 +5,7 @@ import { useRoutes } from "react-router-dom";
 import { Navigate } from "react-router-dom";
 import Dashboard from "./pages/Dashboard/Dashboard";
 import Attendance from "./pages/Attendance";
+import GeoLocalization from "./components/GeoLocalization"
 import Home from "./pages/HomePage/Home";
 import Classes from "./pages/Classes/Classes";
 import QrCode from "./pages/QrCode/QrCode";
@@ -27,7 +28,7 @@ const routes = (accessToken) => [
     children: [
       { path: "/home", element: <Home /> },
       { path: "/aulas", element: <Classes /> },
-      { path: "/faltas", element: <Attendance /> },
+      { path: "/faltas", element: <GeoLocalization /> },
       { path: "/presenca", element: <Attendance /> },
       { path: "/configuracao", element: <Attendance /> },
       { path: "/qrcode", element: <QrCode /> },

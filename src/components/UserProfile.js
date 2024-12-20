@@ -8,7 +8,7 @@ import { useDispatch } from 'react-redux';
 const UserProfile = () => {
     const profile = useSelector((state) => state.auth.profile.decodedPayload);
 
-    console.log(profile)
+
     const dispatch = useDispatch();
 
     const [currentDate, setCurrentDate] = useState('');

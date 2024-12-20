@@ -60,7 +60,7 @@ function Attendance() {
 
     // Detecta faces da webcam usando o SSDMobileNetV1 e compara com a imagem de referência
     const faceMyDetect = () => {
-        console.log('caiu aqui')
+
         if (!modelLoaded || labeledDescriptors.length === 0) return; // Garante que os modelos e a imagem de referência estejam carregados
 
         setInterval(async () => {
@@ -86,7 +86,7 @@ function Attendance() {
             faceapi.draw.drawFaceLandmarks(canvas, resizedDetections)
             faceapi.draw.drawFaceExpressions(canvas, resizedDetections)
 
-            console.log('parece que e aqui')
+
 
             // Comparar a face da webcam com a imagem de referência usando FaceMatcher
             if (detections.length > 0) {

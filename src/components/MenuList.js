@@ -11,7 +11,6 @@ const MenuList = ({ darkTheme }) => {
         { label:'QR Code', key:'qrcode', icon:<PayCircleOutlined />, url:'/qrcode'}, // Aqui foi trocado para PayCircleOutlined
         { 
             label:'Aulas', key:'class', icon:<BarsOutlined />,
-            label:'Aulas', key:'class', icon:<BarsOutlined />,
             children:[
                 { label:'Presença', key:'attendance', icon:<AreaChartOutlined />, url:'/presenca'},
                 { label:'Qr Code', key:'qrcode-aulas', icon:<PayCircleOutlined />, url:'/qrcode-aulas'},
