@@ -46,8 +46,6 @@ const Classes = () => {
           classroom: classItem.classroom,
           typeClass: classItem.typeClass,
           title: subject.name,
-          classroom: classItem.classroom, // Adicionando o nome da sala
-          typeClass: classItem.typeClass, // Adicionando o tipo da aula
           start: startTime.toDate(),
           end: endTime.toDate(),
           attendance: classItem.attendance,

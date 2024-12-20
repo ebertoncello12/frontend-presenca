@@ -22,32 +22,32 @@ const Home = () => {
   const calculateProgress = (startTimeClass, duration) => {
     const startTime = new Date(startTimeClass); // Hora de início da aula
     const now = new Date(); // Hora atual com Date() do JavaScript puro
-  
+
     // Se a aula ainda não começou
     if (now < startTime) {
-      return 0; 
+      return 0;
     }
 
-  
+
     // Se a aula já terminou
     const endTime = new Date(startTime.getTime() + duration * 60000); // Adiciona a duração (em minutos) à startTime
     if (now > endTime) {
       return 100; // 100% de progresso
     }
-  
+
     // Calculando o progresso caso a aula esteja em andamento
     const timeElapsed = (now - startTime) / 60000; // Tempo passado desde o início em minutos
     const progress = (timeElapsed / duration) * 100; // Porcentagem de progresso
-  
+
     return Math.min(progress, 100); // Garantir que não ultrapasse 100%
   };
-  
+
 
   useEffect(() => {
     const fetchAttendance = async () => {
       try {
         const response = await StudentService.getStudentById(student_id);
-        setStudentResponse(response); // Define o estado studentResponse com os dados recebidos
+        setStudentResponse(response);
 
         const today = moment().format("YYYY-MM-DD");
 

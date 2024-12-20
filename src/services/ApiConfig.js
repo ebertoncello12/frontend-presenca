@@ -7,7 +7,6 @@ const ApiConfig = axios.create({
   }
 });
 
-// Adicionar um interceptor para incluir o token nas requisições
 ApiConfig.interceptors.request.use(
   config => {
     const token = localStorage.getItem('AUTH');

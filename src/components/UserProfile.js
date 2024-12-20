@@ -7,6 +7,8 @@ import { useDispatch } from 'react-redux';
 
 const UserProfile = () => {
     const profile = useSelector((state) => state.auth.profile.decodedPayload);
+
+    console.log(profile)
     const dispatch = useDispatch();
 
     const [currentDate, setCurrentDate] = useState('');
@@ -59,8 +61,7 @@ const UserProfile = () => {
             </div>
             <div>
                 <Popover placement="bottomRight" content={content}>
-                    {/* Utilize o link externo como a imagem do Avatar */}
-                    <Avatar size={38} src={avatarImage} />
+                    <Avatar size={38} src={profile?.payload.registrationFace} />
                 </Popover>
             </div>
         </div>

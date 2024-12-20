@@ -1,4 +1,4 @@
-import Attendance from "../../pages/Attendance/Attendance";
+import Attendance from "../../pages/Attendance";
 import ApiConfig from "../ApiConfig";
 const StudentService = {
     getStudentById: async (id) => {

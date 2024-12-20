@@ -12,7 +12,7 @@ const raw = Object.keys(process.env).reduce(
   },
   {
     BUILD_TIME: new Date(),
-    BUILD_USERNAME: process.env.USERNAME,
+    BUILD_USERNAME: 'Enzzo',
     BUILD_MODE: buildMode,
   }
 );
